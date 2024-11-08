@@ -1,0 +1,169 @@
+using System;
+using System.Collections.Generic;
+
+public class RoomBookingSystem
+{
+    public bool BookRoom(int roomId)
+    {
+        Console.WriteLine($"Room {roomId} has been booked.");
+        return true;
+    }
+
+    public bool CheckAvailability(int roomId)
+    {
+        Console.WriteLine($"Room {roomId} is available.");
+        return true;
+    }
+
+    public void CancelBooking(int roomId)
+    {
+        Console.WriteLine($"Booking for room {roomId} has been cancelled.");
+    }
+}
+
+public class RestaurantSystem
+{
+    public bool ReserveTable(int tableId)
+    {
+        Console.WriteLine($"Table {tableId} has been reserved.");
+        return true;
+    }
+
+    public void OrderFood(string dish)
+    {
+        Console.WriteLine($"Ordered dish: {dish}");
+    }
+
+    public void CancelTableReservation(int tableId)
+    {
+        Console.WriteLine($"Reservation for table {tableId} has been cancelled.");
+    }
+}
+
+public class EventManagementSystem
+{
+    public void BookConferenceRoom(int roomId)
+    {
+        Console.WriteLine($"Conference room {roomId} has been booked for the event.");
+    }
+
+    public void OrderEquipment(string equipment)
+    {
+        Console.WriteLine($"Equipment {equipment} has been ordered.");
+    }
+
+    public void CancelConferenceRoomBooking(int roomId)
+    {
+        Console.WriteLine($"Conference room booking for room {roomId} has been cancelled.");
+    }
+}
+
+public class CleaningService
+{
+    public void ScheduleCleaning(int roomId, DateTime time)
+    {
+        Console.WriteLine($"Cleaning scheduled for room {roomId} at {time}.");
+    }
+
+    public void PerformCleaning(int roomId)
+    {
+        Console.WriteLine($"Cleaning performed for room {roomId}.");
+    }
+
+    public void RequestImmediateCleaning(int roomId)
+    {
+        Console.WriteLine($"Immediate cleaning requested for room {roomId}.");
+    }
+}
+
+public class HotelFacade
+{
+    private RoomBookingSystem _roomBookingSystem;
+    private RestaurantSystem _restaurantSystem;
+    private EventManagementSystem _eventManagementSystem;
+    private CleaningService _cleaningService;
+
+    public HotelFacade()
+    {
+        _roomBookingSystem = new RoomBookingSystem();
+        _restaurantSystem = new RestaurantSystem();
+        _eventManagementSystem = new EventManagementSystem();
+        _cleaningService = new CleaningService();
+    }
+
+    public void BookRoomWithServices(int roomId, string dish, DateTime cleaningTime)
+    {
+        if (_roomBookingSystem.CheckAvailability(roomId) && _roomBookingSystem.BookRoom(roomId))
+        {
+            _restaurantSystem.OrderFood(dish);
+            _cleaningService.ScheduleCleaning(roomId, cleaningTime);
+            Console.WriteLine("Room booking with restaurant and cleaning services completed.");
+        }
+        else
+        {
+            Console.WriteLine("Failed to book room with services.");
+        }
+    }
+
+    public void OrganizeEvent(int conferenceRoomId, int[] participantRoomIds, string equipment)
+    {
+        _eventManagementSystem.BookConferenceRoom(conferenceRoomId);
+        foreach (var roomId in participantRoomIds)
+        {
+            if (_roomBookingSystem.CheckAvailability(roomId))
+                _roomBookingSystem.BookRoom(roomId);
+        }
+        _eventManagementSystem.OrderEquipment(equipment);
+        Console.WriteLine("Event with room booking and equipment setup organized successfully.");
+    }
+
+    public void ReserveTableWithTaxi(int tableId)
+    {
+        if (_restaurantSystem.ReserveTable(tableId))
+        {
+            Console.WriteLine("Table reserved. Taxi has been ordered automatically.");
+        }
+        else
+        {
+            Console.WriteLine("Failed to reserve table.");
+        }
+    }
+
+    public void CancelRoomBooking(int roomId)
+    {
+        _roomBookingSystem.CancelBooking(roomId);
+    }
+
+    public void CancelTableReservation(int tableId)
+    {
+        _restaurantSystem.CancelTableReservation(tableId);
+    }
+
+    public void CancelConferenceRoomBooking(int roomId)
+    {
+        _eventManagementSystem.CancelConferenceRoomBooking(roomId);
+    }
+
+    public void RequestCleaning(int roomId)
+    {
+        _cleaningService.RequestImmediateCleaning(roomId);
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        HotelFacade hotelFacade = new HotelFacade();
+
+        hotelFacade.BookRoomWithServices(roomId: 101, dish: "Pasta", cleaningTime: DateTime.Now.AddHours(2));
+
+        hotelFacade.OrganizeEvent(conferenceRoomId: 201, participantRoomIds: new int[] { 101, 102, 103 }, equipment: "Projector");
+
+        hotelFacade.ReserveTableWithTaxi(tableId: 10);
+
+        hotelFacade.CancelRoomBooking(101);
+
+        hotelFacade.RequestCleaning(101);
+    }
+}
