@@ -1,0 +1,219 @@
+using System;
+using System.Collections.Generic;
+
+public abstract class OrganizationComponent
+{
+    public string Name { get; protected set; }
+    public abstract void Display(int indent = 0);
+    public abstract double GetBudget();
+    public abstract int GetEmployeeCount();
+    public abstract OrganizationComponent FindEmployeeByName(string name);
+    public abstract void GetAllEmployees(List<OrganizationComponent> employeesList);
+}
+
+public class Employee : OrganizationComponent
+{
+    public string Position { get; private set; }
+    private double _salary;
+
+    public double Salary
+    {
+        get => _salary;
+        set => _salary = value;
+    }
+
+    public Employee(string name, string position, double salary)
+    {
+        Name = name;
+        Position = position;
+        _salary = salary;
+    }
+
+    public override void Display(int indent = 0)
+    {
+        Console.WriteLine($"{new string(' ', indent)}- {Position}: {Name}, Salary: {Salary}");
+    }
+
+    public override double GetBudget()
+    {
+        return Salary;
+    }
+
+    public override int GetEmployeeCount()
+    {
+        return 1;
+    }
+
+    public override OrganizationComponent FindEmployeeByName(string name)
+    {
+        return Name.Equals(name, StringComparison.OrdinalIgnoreCase) ? this : null;
+    }
+
+    public override void GetAllEmployees(List<OrganizationComponent> employeesList)
+    {
+        employeesList.Add(this);
+    }
+}
+
+public class Contractor : OrganizationComponent
+{
+    public string Position { get; private set; }
+    public double FixedPayment { get; private set; }
+
+    public Contractor(string name, string position, double fixedPayment)
+    {
+        Name = name;
+        Position = position;
+        FixedPayment = fixedPayment;
+    }
+
+    public override void Display(int indent = 0)
+    {
+        Console.WriteLine($"{new string(' ', indent)}- {Position} (Contractor): {Name}, Payment: {FixedPayment}");
+    }
+
+    public override double GetBudget()
+    {
+        return 0; // Не включается в бюджет отдела
+    }
+
+    public override int GetEmployeeCount()
+    {
+        return 1;
+    }
+
+    public override OrganizationComponent FindEmployeeByName(string name)
+    {
+        return Name.Equals(name, StringComparison.OrdinalIgnoreCase) ? this : null;
+    }
+
+    public override void GetAllEmployees(List<OrganizationComponent> employeesList)
+    {
+        employeesList.Add(this);
+    }
+}
+
+public class Department : OrganizationComponent
+{
+    private List<OrganizationComponent> _components = new List<OrganizationComponent>();
+
+    public Department(string name)
+    {
+        Name = name;
+    }
+
+    public void Add(OrganizationComponent component)
+    {
+        if (!_components.Contains(component))
+        {
+            _components.Add(component);
+        }
+    }
+
+    public void Remove(OrganizationComponent component)
+    {
+        _components.Remove(component);
+    }
+
+    public override void Display(int indent = 0)
+    {
+        Console.WriteLine($"{new string(' ', indent)}* Department: {Name}");
+        foreach (var component in _components)
+        {
+            component.Display(indent + 2);
+        }
+    }
+
+    public override double GetBudget()
+    {
+        double totalBudget = 0;
+        foreach (var component in _components)
+        {
+            totalBudget += component.GetBudget();
+        }
+        return totalBudget;
+    }
+
+    public override int GetEmployeeCount()
+    {
+        int totalEmployees = 0;
+        foreach (var component in _components)
+        {
+            totalEmployees += component.GetEmployeeCount();
+        }
+        return totalEmployees;
+    }
+
+    public override OrganizationComponent FindEmployeeByName(string name)
+    {
+        foreach (var component in _components)
+        {
+            var found = component.FindEmployeeByName(name);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+        return null;
+    }
+
+    public override void GetAllEmployees(List<OrganizationComponent> employeesList)
+    {
+        foreach (var component in _components)
+        {
+            component.GetAllEmployees(employeesList);
+        }
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Создаем сотрудников и контракторов
+        Employee emp1 = new Employee("Alice", "Manager", 80000);
+        Employee emp2 = new Employee("Bob", "Developer", 60000);
+        Employee emp3 = new Employee("Charlie", "Developer", 60000);
+        Contractor contractor1 = new Contractor("Daisy", "Designer", 55000);
+
+        // Создаем отделы
+        Department devDepartment = new Department("Development Department");
+        devDepartment.Add(emp2);
+        devDepartment.Add(emp3);
+
+        Department designDepartment = new Department("Design Department");
+        designDepartment.Add(contractor1);
+
+        Department mainDepartment = new Department("Main Department");
+        mainDepartment.Add(emp1);
+        mainDepartment.Add(devDepartment);
+        mainDepartment.Add(designDepartment);
+
+        // Отображаем структуру организации
+        mainDepartment.Display();
+
+        // Выводим бюджет и общее количество сотрудников
+        Console.WriteLine($"\nTotal Budget: {mainDepartment.GetBudget()}");
+        Console.WriteLine($"Total Employees: {mainDepartment.GetEmployeeCount()}");
+
+        // Изменение зарплаты сотрудника
+        emp2.Salary = 65000;
+        Console.WriteLine("\nUpdated Budget after Salary Change:");
+        Console.WriteLine($"Total Budget: {mainDepartment.GetBudget()}");
+
+        // Поиск сотрудника по имени
+        string searchName = "Charlie";
+        var foundEmployee = mainDepartment.FindEmployeeByName(searchName);
+        Console.WriteLine($"\nEmployee Search for '{searchName}':");
+        foundEmployee?.Display();
+
+        // Отображение всех сотрудников отдела
+        Console.WriteLine("\nAll Employees in Main Department:");
+        List<OrganizationComponent> allEmployees = new List<OrganizationComponent>();
+        mainDepartment.GetAllEmployees(allEmployees);
+        foreach (var employee in allEmployees)
+        {
+            employee.Display();
+        }
+    }
+}
